@@ -6,6 +6,7 @@
 #include "slic3r/plugin/PluginAuditManager.hpp"
 #include "slic3r/plugin/PythonInterpreter.hpp" // PythonGILState
 #include "slic3r/plugin/PluginFsUtils.hpp"   // json_to_py / py_to_json
+#include "libslic3r_version.h" // SLIC3R_APP_NAME
 
 #include <functional>
 #include <exception>
@@ -661,7 +662,7 @@ void PluginHostUi::RegisterBindings(pybind11::module_& host)
         "on the slicing worker thread, which the UI thread can itself be blocked waiting on, so a "
         "marshaled UI call from there can deadlock the application.");
 
-    ui.def("message", &ui_message, py::arg("text"), py::arg("title") = "OrcaSlicer", py::arg("buttons") = "ok",
+    ui.def("message", &ui_message, py::arg("text"), py::arg("title") = SLIC3R_APP_NAME, py::arg("buttons") = "ok",
            py::arg("icon") = "info",
            "Show a native modal message box; returns the clicked button id "
            "(\"ok\"/\"cancel\"/\"yes\"/\"no\"). buttons: \"ok\"|\"ok_cancel\"|\"yes_no\"|\"yes_no_cancel\"; "
@@ -688,7 +689,7 @@ void PluginHostUi::RegisterBindings(pybind11::module_& host)
             "is_open", [](const UiWindowHandle& h) { return UiRegistry::instance().is_open(h.id); },
             "Return True while the window is open.");
 
-    ui.def("create_window", &ui_create_window, py::arg("html"), py::arg("title") = "OrcaSlicer", py::arg("width") = 820,
+    ui.def("create_window", &ui_create_window, py::arg("html"), py::arg("title") = SLIC3R_APP_NAME, py::arg("width") = 820,
            py::arg("height") = 600, py::arg("on_message") = py::none(), py::arg("on_close") = py::none(),
            py::arg("style") = WINDOW_MODELESS, py::arg("on_submit") = py::none(),
            "Open a persistent HTML window or modal dialog and return a UiWindow. style is WINDOW_MODELESS "
@@ -710,7 +711,7 @@ void PluginHostUi::RegisterBindings(pybind11::module_& host)
             "is_open", [](const UiDockPanelHandle& h) { return UiRegistry::instance().is_open(h.id); },
             "Return True until the panel is closed; a hidden panel is still open.");
 
-    ui.def("create_dock_panel", &ui_create_dock_panel, py::arg("html"), py::arg("title") = "OrcaSlicer",
+    ui.def("create_dock_panel", &ui_create_dock_panel, py::arg("html"), py::arg("title") = SLIC3R_APP_NAME,
            py::arg("width") = 320, py::arg("height") = 480, py::arg("on_message") = py::none(),
            py::arg("on_close") = py::none(), py::arg("dock") = "right",
            "Open an HTML panel docked beside the 3D view and return a UiDockPanel. dock is \"left\", \"right\", "
