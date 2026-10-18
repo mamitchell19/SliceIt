@@ -85,8 +85,8 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           gh release view "$TAG" > /dev/null || { echo "::error::No release with tag '$TAG' exists in $GH_REPO."; exit 1; }
-          # Newest successful push build of main that still has its SliceIt artifacts.
-          for id in $(gh run list --workflow build_all.yml --branch main --event push --status success \
+          # Newest successful build of main (pushed or run by hand) that still has its SliceIt artifacts.
+          for id in $(gh run list --workflow build_all.yml --branch main --status success \
                         --limit 20 --json databaseId --jq '.[].databaseId'); do
             if gh api "repos/$GH_REPO/actions/runs/$id/artifacts" \
                  --jq '[.artifacts[] | select(.name | startswith("SliceIt_Windows_")) | select(.expired | not)] | length > 0' \
