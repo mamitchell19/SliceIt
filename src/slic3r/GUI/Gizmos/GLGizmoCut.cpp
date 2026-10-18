@@ -3556,7 +3556,7 @@ static void check_objects_after_cut(const ModelObjectPtrs& objects)
         names += ", " + from_u8(err_objects_names[i]);
     WarningDialog(wxGetApp().plater(), format_wxstr(_L_PLURAL("Object (%1%) has duplicated connectors. "
                                 "Some connectors may be missing in slicing result.\n"
-                                "Please report to the SliceIt team in which scenario this issue happened.\n"
+                                "Please report to the Stratum Orca Slicer team in which scenario this issue happened.\n"
                                 "Thank you.",
                                 "Objects (%1%) have duplicated connectors. "
                                 "Some connectors may be missing in slicing result.\n"

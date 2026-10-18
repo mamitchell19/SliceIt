@@ -8,12 +8,12 @@
 #include <initializer_list>
 #include <limits>
 #include <utility>
-#define SLIC3R_APP_FULL_NAME "SliceIt"
+#define SLIC3R_APP_FULL_NAME "Stratum Orca Slicer"
 // Name written into G-code headers. Kept as OrcaSlicer so printer hosts
 // (Moonraker/Mainsail/Fluidd, OctoPrint plugins) and stock OrcaSlicer keep
 // recognizing the files for thumbnails, time estimates and config import.
 #define SLIC3R_COMPAT_NAME "OrcaSlicer"
-#define GCODEVIEWER_APP_NAME "SliceIt G-code Viewer"
+#define GCODEVIEWER_APP_NAME "Stratum Orca Slicer G-code Viewer"
 #define GCODEVIEWER_APP_KEY  "OrcaSlicerGcodeViewer"
 #define GCODEVIEWER_BUILD_ID std::string("OrcaSlicer G-code Viewer-") + std::string(SLIC3R_VERSION) + std::string("-RC")
 

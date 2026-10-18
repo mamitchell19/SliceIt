@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=SliceIt
+Name=Stratum Orca Slicer
 GenericName=3D Printing Software
 Icon=OrcaSlicer
 Exec=orca-slicer %U

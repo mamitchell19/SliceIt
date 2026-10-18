@@ -4588,7 +4588,7 @@ void GLGizmoTextureDisplacement::render_texture_library_popup(const ImVec2 &pane
         if (ImGui::IsItemHovered())
             panel_tooltip(_u8L("Import your own image as a height map. It is converted to the format the slicer "
                                "bakes from and saved to your personal texture folder, kept separate from the "
-                               "textures shipped with SliceIt."));
+                               "textures shipped with Stratum Orca Slicer."));
         end_grid(origin, count + 1);
         // Belongs to this section: it describes the import tile and the remove-on-hover tiles, both of
         // which live here, so it is hidden with them rather than left describing controls off-screen.

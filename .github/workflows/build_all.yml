@@ -1,8 +1,8 @@
-name: Build SliceIt (Windows)
+name: Build Stratum Orca Slicer (Windows)
 
-# SliceIt: Windows x64 only. The first run builds OrcaSlicer's dependencies from
+# Stratum Orca Slicer: Windows x64 only. The first run builds OrcaSlicer's dependencies from
 # source (roughly 1-2 hours) and caches them; later runs reuse that cache and only
-# rebuild SliceIt itself.
+# rebuild the app itself.
 #
 # Releases: publishing a GitHub release builds that release's code and attaches
 # the Windows installer and portable zip to it. To attach files to a release that
@@ -78,21 +78,21 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: actions/download-artifact@v8
         with:
-          pattern: SliceIt_Windows_*
+          pattern: StratumOrcaSlicer_Windows_*
           path: dist
 
       - name: Download the latest main Windows build
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           gh release view "$TAG" > /dev/null || { echo "::error::No release with tag '$TAG' exists in $GH_REPO."; exit 1; }
-          # Newest successful build of main (pushed or run by hand) that still has its SliceIt artifacts.
+          # Newest successful build of main (pushed or run by hand) that still has its Windows artifacts.
           for id in $(gh run list --workflow build_all.yml --branch main --status success \
                         --limit 20 --json databaseId --jq '.[].databaseId'); do
             if gh api "repos/$GH_REPO/actions/runs/$id/artifacts" \
-                 --jq '[.artifacts[] | select(.name | startswith("SliceIt_Windows_")) | select(.expired | not)] | length > 0' \
+                 --jq '[.artifacts[] | select(.name | startswith("StratumOrcaSlicer_Windows_")) | select(.expired | not)] | length > 0' \
                  | grep -q true; then
               echo "Using build https://github.com/$GH_REPO/actions/runs/$id"
-              gh run download "$id" --pattern 'SliceIt_Windows_*' --dir dist
+              gh run download "$id" --pattern 'StratumOrcaSlicer_Windows_*' --dir dist
               exit 0
             fi
           done
@@ -103,15 +103,15 @@ jobs:
         run: |
           mkdir -p upload
           shopt -s nullglob
-          # Portable build: the artifact holds the app folder's contents; zip them in a SliceIt folder.
-          for d in dist/SliceIt_Windows_*_portable; do
+          # Portable build: the artifact holds the app folder's contents; zip them in an app folder.
+          for d in dist/StratumOrcaSlicer_Windows_*_portable; do
             name=$(basename "$d")
-            mv "$d" SliceIt
-            zip -qr "upload/$name.zip" SliceIt
-            rm -rf SliceIt
+            mv "$d" "Stratum Orca Slicer"
+            zip -qr "upload/$name.zip" "Stratum Orca Slicer"
+            rm -rf "Stratum Orca Slicer"
           done
           # Installer: the artifact holds the .exe.
-          for exe in dist/SliceIt_Windows_*_installer/*.exe; do
+          for exe in dist/StratumOrcaSlicer_Windows_*_installer/*.exe; do
             mv "$exe" upload/
           done
           ls -la upload

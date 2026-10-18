@@ -624,7 +624,7 @@ void MediaFilePanel::doAction(size_t index, int action)
                         wxPostEvent(Slic3r::GUI::wxGetApp().plater(), SimpleEvent(EVT_PRINT_FROM_SDCARD_VIEW));
                     }
                     else {
-                        MessageDialog dlg(this, _L("The .gcode.3mf file contains no G-code data. Please slice it with SliceIt and export a new .gcode.3mf file."),
+                        MessageDialog dlg(this, _L("The .gcode.3mf file contains no G-code data. Please slice it with Stratum Orca Slicer and export a new .gcode.3mf file."),
                             wxEmptyString, wxICON_WARNING | wxOK);
                         auto res = dlg.ShowModal();
                     }
