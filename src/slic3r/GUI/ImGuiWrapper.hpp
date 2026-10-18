@@ -371,10 +371,11 @@ public:
     static const ImVec4 COL_TOOLBAR_BG_DARK;
     static const ImVec4 COL_SEPARATOR;
     static const ImVec4 COL_SEPARATOR_DARK;
-    static const ImVec4 COL_ORCA;
-    static const ImVec4 COL_ORCA_DARK;
-    static const ImVec4 COL_ORCA_HOVER;
-    static const ImVec4 COL_ORCA_HOVER_DARK;
+    // Accent colors; set by the active color theme (see Theme.cpp), so not const.
+    static ImVec4 COL_ORCA;
+    static ImVec4 COL_ORCA_DARK;
+    static ImVec4 COL_ORCA_HOVER;
+    static ImVec4 COL_ORCA_HOVER_DARK;
     static const ImVec4 COL_MODIFIED;
     static const ImVec4 COL_WARNING;
 

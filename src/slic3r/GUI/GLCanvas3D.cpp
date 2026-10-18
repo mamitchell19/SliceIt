@@ -191,6 +191,14 @@ static Slic3r::ColorRGBA DEFAULT_BG_LIGHT_COLOR_DARK = { 0.329f, 0.329f, 0.353f,
 static Slic3r::ColorRGBA ERROR_BG_LIGHT_COLOR        = { 0.753f, 0.192f, 0.039f, 1.0f };
 static Slic3r::ColorRGBA ERROR_BG_LIGHT_COLOR_DARK   = { 0.753f, 0.192f, 0.039f, 1.0f };
 
+void Slic3r::GUI::GLCanvas3D::set_theme_background(const ColorRGBA *light, const ColorRGBA *dark)
+{
+    static const Slic3r::ColorRGBA light_default = DEFAULT_BG_LIGHT_COLOR;
+    static const Slic3r::ColorRGBA dark_default  = DEFAULT_BG_LIGHT_COLOR_DARK;
+    DEFAULT_BG_LIGHT_COLOR      = light ? *light : light_default;
+    DEFAULT_BG_LIGHT_COLOR_DARK = dark ? *dark : dark_default;
+}
+
 void Slic3r::GUI::GLCanvas3D::update_render_colors()
 {
     DEFAULT_BG_LIGHT_COLOR = ImGuiWrapper::from_ImVec4(RenderColor::colors[RenderCol_3D_Background]);
@@ -10478,7 +10486,7 @@ void GLCanvas3D::_render_imgui_select_plate_toolbar()
             text_bottom = std::to_string(sliced_plates_cnt) + " / " + std::to_string(total_plates_cnt);
             ImVec2 bar_fg_end = ImVec2(bar_bg_bgn.x + bar_total_perc_pos + bar_current_perc_pos, bar_bg_end.y);
             ImGui::GetWindowDrawList()->AddRectFilled(bar_bg_bgn, bar_bg_end, IM_COL32(128, 128, 128, 255), bar_size.y); // BAR BACKGROUND
-            ImGui::GetWindowDrawList()->AddRectFilled(bar_bg_bgn, bar_fg_end, IM_COL32(0, 150, 136, 255),   bar_size.y); // BAR PROGRESS
+            ImGui::GetWindowDrawList()->AddRectFilled(bar_bg_bgn, bar_fg_end, ImGui::ColorConvertFloat4ToU32(ImGuiWrapper::COL_ORCA), bar_size.y); // BAR PROGRESS
         }
         else if (all_plates_stats_item->slice_state == IMToolbarItem::SliceState::SLICE_FAILED) {
             text_top    = _u8L("Failed");

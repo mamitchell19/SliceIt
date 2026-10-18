@@ -56,6 +56,13 @@ static std::map<wxColour, wxColour> gDarkColors{
     {"#E5F0EE", "#283232"}, // rgb(229, 240, 238)  Combo / Dropdown focused background color > ORCA color with %10 opacity
 };
 
+// The original (OrcaSlicer) dark table; SetTheme rebuilds gDarkColors from it.
+static const std::map<wxColour, wxColour> gBaseDarkColors = gDarkColors;
+// Accent replacements while a non-classic theme is in light mode.
+static std::map<wxColour, wxColour> gLightOverrides;
+static bool gReverseDirty = true;
+static wxColour gAccentText(0, 150, 136);
+
 std::tuple<double, double, double> StateColor::GetLAB(const wxColour& color) {
     // Convert color to RGB color space
     double r = color.Red() / 255.0;
@@ -190,12 +197,87 @@ std::map<wxColour, wxColour> const & StateColor::GetDarkMap()
     return gDarkColors;
 }
 
+std::map<wxColour, wxColour> const & StateColor::GetBaseDarkMap()
+{
+    return gBaseDarkColors;
+}
+
+wxColour StateColor::accentText() { return gAccentText; }
+
+wxColour StateColor::FromHSL(float hue, float sat, float light)
+{
+    hue = std::fmod(std::fmod(hue, 360.f) + 360.f, 360.f);
+    sat = std::max(0.f, std::min(1.f, sat));
+    light = std::max(0.f, std::min(1.f, light));
+    const float c = (1.f - std::fabs(2.f * light - 1.f)) * sat;
+    const float x = c * (1.f - std::fabs(std::fmod(hue / 60.f, 2.f) - 1.f));
+    const float m = light - c / 2.f;
+    float r = 0, g = 0, b = 0;
+    if      (hue < 60.f)  { r = c; g = x; }
+    else if (hue < 120.f) { r = x; g = c; }
+    else if (hue < 180.f) { g = c; b = x; }
+    else if (hue < 240.f) { g = x; b = c; }
+    else if (hue < 300.f) { r = x; b = c; }
+    else                  { r = c; b = x; }
+    auto to8 = [](float v) { return (unsigned char) std::lround(std::max(0.f, std::min(1.f, v)) * 255.f); };
+    return wxColour(to8(r + m), to8(g + m), to8(b + m));
+}
+
+void StateColor::ToHSL(wxColour const &color, float &hue, float &sat, float &light)
+{
+    const float r = color.Red() / 255.f, g = color.Green() / 255.f, b = color.Blue() / 255.f;
+    const float mx = std::max({r, g, b}), mn = std::min({r, g, b});
+    const float d = mx - mn;
+    light = (mx + mn) / 2.f;
+    hue = 0.f;
+    sat = 0.f;
+    if (d <= 1e-6f)
+        return;
+    sat = d / (1.f - std::fabs(2.f * light - 1.f));
+    if (mx == r)      hue = 60.f * std::fmod((g - b) / d, 6.f);
+    else if (mx == g) hue = 60.f * ((b - r) / d + 2.f);
+    else              hue = 60.f * ((r - g) / d + 4.f);
+    if (hue < 0.f)
+        hue += 360.f;
+}
+
+void StateColor::SetTheme(StateColorTheme const &t)
+{
+    gDarkColors = gBaseDarkColors;
+    gLightOverrides.clear();
+    gAccentText = t.accent_text;
+    if (t.enabled) {
+        gAccentText = t.accent_text;
+        if (t.dark) {
+            // Give the neutral dark surfaces the theme's tint; light entries (text) are left alone.
+            for (auto &kv : gDarkColors) {
+                float h, s, l;
+                ToHSL(kv.second, h, s, l);
+                if (l < 0.45f && s < 0.20f)
+                    kv.second = FromHSL(t.tint_hue, t.tint_sat, l);
+            }
+            gDarkColors[wxColour("#009688")] = t.accent;
+            gDarkColors[wxColour("#26A69A")] = t.accent_hover;
+            gDarkColors[wxColour("#BFE1DE")] = t.accent_soft_strong;
+            gDarkColors[wxColour("#E5F0EE")] = t.accent_soft;
+        } else {
+            gLightOverrides[wxColour("#009688")] = t.accent;
+            gLightOverrides[wxColour("#26A69A")] = t.accent_hover;
+            gLightOverrides[wxColour("#BFE1DE")] = t.accent_soft_strong;
+            gLightOverrides[wxColour("#E5F0EE")] = t.accent_soft;
+        }
+    }
+    gReverseDirty = true;
+}
+
 void StateColor::SetDarkMode(bool dark) { gDarkMode = dark; }
 
 inline wxColour darkModeColorFor2(wxColour const &color)
 {
-    if (!gDarkMode)
-        return color;
+    if (!gDarkMode) {
+        auto over = gLightOverrides.find(color);
+        return over != gLightOverrides.end() ? over->second : color;
+    }
     auto iter = gDarkColors.find(color);
     if (iter != gDarkColors.end()) return iter->second;
     return color;
@@ -210,7 +292,11 @@ std::map<wxColour, wxColour> revert(std::map<wxColour, wxColour> const & map)
 
 wxColour StateColor::lightModeColorFor(wxColour const &color)
 {
-    static std::map<wxColour, wxColour> gLightColors = revert(gDarkColors);
+    static std::map<wxColour, wxColour> gLightColors;
+    if (gReverseDirty) {
+        gLightColors = revert(gDarkColors);
+        gReverseDirty = false;
+    }
     auto iter = gLightColors.find(color);
     if (iter != gLightColors.end()) return iter->second;
     return color;

@@ -6,6 +6,7 @@
 #include "libslic3r/Technologies.hpp"
 #include "libslic3r/Platform.hpp"
 #include "GUI_App.hpp"
+#include "Theme.hpp"
 #include "Shortcuts.hpp"
 #include "DeviceCore/DevConfigUtil.h"
 #include "BindDialog.hpp"
@@ -4459,6 +4460,10 @@ void GUI_App::init_label_colours()
     m_color_label_default = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 #endif
     m_color_window_default          = is_dark_mode ? wxColour(43, 43, 43)   : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    if (app_config) {
+        Theme::load_from_config(*app_config);
+        Theme::apply();
+    }
     StateColor::SetDarkMode(is_dark_mode);
 }
 

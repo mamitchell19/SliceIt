@@ -4,6 +4,7 @@
 #include "../Utils/MacDarkMode.hpp"
 #include "GUI.hpp"
 #include "GUI_Utils.hpp"
+#include "Theme.hpp"
 
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
@@ -331,6 +332,7 @@ wxBitmap* BitmapCache::load_svg(const std::string &bitmap_name, unsigned target_
                                            "-w" + std::to_string(target_width))
                                          + (m_scale != 1.0f ? "-s" + float_to_string_decimal_point(m_scale) : "")
                                          + (dark_mode ? "-dm" : "")
+                                         + (Theme::current().classic ? "" : "-t" + Theme::current().id)
                                          + (grayscale ? "-gs" : "")
                                          + new_color;
 
@@ -340,7 +342,11 @@ wxBitmap* BitmapCache::load_svg(const std::string &bitmap_name, unsigned target_
 
     // map of color replaces
     std::map<std::string, std::string> replaces;
-    replaces["\"#0x00AE42\""] = "\"#009688\"";
+    // Color theme: the accent baked into the icons (#009688) becomes the theme accent. Done last in
+    // this function for the plain "#009688" key, so every spelling of the color is covered.
+    const ColorTheme &theme = Theme::current();
+    const std::string theme_accent = Theme::hex(theme.accent);
+    replaces["\"#0x00AE42\""] = theme.classic ? "\"#009688\"" : "\"" + theme_accent + "\"";
     replaces["\"#00FF00\""] = "\"#52c7b8\"";
     if (dark_mode) {
         replaces["\"#262E30\""] = "\"#EFEFF0\"";
@@ -351,7 +357,7 @@ wxBitmap* BitmapCache::load_svg(const std::string &bitmap_name, unsigned target_
         replaces["\"#6B6B6B\""] = "\"#818182\"";
         replaces["\"#909090\""] = "\"#FFFFFF\"";
         replaces["\"#00FF00\""] = "\"#FF0000\"";
-        replaces["\"#009688\""] = "\"#00675b\"";
+        replaces["\"#009688\""] = theme.classic ? "\"#00675b\"" : "\"" + theme_accent + "\"";
         replaces["\"#F1F1F1\""] = "\"#36363B\"";
         replaces["#DBDBDB"] = "#4A4A51"; // ORCA border color
         replaces["#F0F0F1"] = "#333337"; // ORCA disabled background color
@@ -361,7 +367,9 @@ wxBitmap* BitmapCache::load_svg(const std::string &bitmap_name, unsigned target_
     }
 
     if (strstr(bitmap_name.c_str(), "toggle_on") != NULL && dark_mode) // ORCA only replace color of toggle button
-        replaces["#009688"] = "#00675b";
+        replaces["#009688"] = theme.classic ? "#00675b" : theme_accent;
+    else if (!theme.classic && !dark_mode)
+        replaces["#009688"] = theme_accent; // icons that spell the accent without quotes (style="fill:#009688")
 
     if (!new_color.empty())
         replaces["\"#009688\""] = "\"" + new_color + "\"";

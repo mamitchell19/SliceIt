@@ -947,6 +947,9 @@ public:
 
     bool is_initialized() const { return m_initialized; }
 
+    // Color theme hook: sets the 3D backdrop for light / dark mode (nullptr = the original color).
+    static void set_theme_background(const ColorRGBA *light, const ColorRGBA *dark);
+
     void set_context(wxGLContext* context) { m_context = context; }
     void set_type(ECanvasType type) { m_canvas_type = type; }
     void set_studio_lighting(bool on) { m_studio_lighting = on; }

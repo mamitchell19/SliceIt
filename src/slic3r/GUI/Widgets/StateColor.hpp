@@ -9,6 +9,20 @@
 #include <map>
 #include <wx/string.h>
 
+// Colors a color theme (see GUI/Theme.hpp) pushes into the widget color tables.
+struct StateColorTheme
+{
+    bool     enabled = false; // false = the original OrcaSlicer look
+    bool     dark    = false;
+    wxColour accent;             // buttons, toggles, selected tabs (this theme's mode)
+    wxColour accent_hover;
+    wxColour accent_soft;        // ~10% accent over the surface (focused rows)
+    wxColour accent_soft_strong; // ~25% accent over the surface (checked items)
+    wxColour accent_text;        // accent used for links and text on the surface
+    float    tint_hue = 0.f;     // dark themes: hue (0-360) and saturation (0-1) given to neutral surfaces
+    float    tint_sat = 0.f;
+};
+
 class StateColor
 {
 public:
@@ -35,6 +49,14 @@ public:
     static double LAB_Delta_E(const wxColour& c1, const wxColour& c2);
 
     static void SetDarkMode(bool dark);
+
+    // Color themes. SetTheme rebuilds the dark-mode table from the original one and sets the
+    // light-mode accent overrides; accentText() is the accent for text and thin lines.
+    static void SetTheme(StateColorTheme const &theme);
+    static std::map<wxColour, wxColour> const &GetBaseDarkMap();
+    static wxColour accentText();
+    static wxColour FromHSL(float hue, float sat, float light); // hue 0-360, sat/light 0-1
+    static void     ToHSL(wxColour const &color, float &hue, float &sat, float &light);
 
     static std::map<wxColour, wxColour> const & GetDarkMap();
     static wxColour darkModeColorFor(wxColour const &color);

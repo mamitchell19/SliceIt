@@ -2,6 +2,7 @@
 #include "CloudProvider.hpp"
 #include "OptionsGroup.hpp"
 #include "GUI_App.hpp"
+#include "Theme.hpp"
 #include "MainFrame.hpp"
 #include "WebViewDialog.hpp"
 #include "Plater.hpp"
@@ -1014,8 +1015,10 @@ wxBoxSizer* PreferencesDialog::create_item_darkmode(wxString title,wxString tool
     //// save config
     checkbox->Bind(wxEVT_TOGGLEBUTTON, [this, checkbox, param](wxCommandEvent& e) {
         app_config->set(param, checkbox->GetValue() ? "1" : "0");
+        Theme::select_mode(*app_config, checkbox->GetValue()); // keep the accent, switch to its light/dark partner
         app_config->save();
         wxGetApp().Update_dark_mode_flag();
+        Theme::apply();
 
         //dark mode
 #ifdef _MSW_DARK_MODE
@@ -1030,6 +1033,44 @@ wxBoxSizer* PreferencesDialog::create_item_darkmode(wxString title,wxString tool
 
     
     return m_sizer;
+}
+
+wxBoxSizer *PreferencesDialog::create_item_theme(wxString title, wxString tooltip)
+{
+    const auto &themes = Theme::all();
+    std::vector<wxString> names;
+    unsigned int current = 0;
+    Theme::load_from_config(*app_config);
+    for (size_t i = 0; i < themes.size(); ++i) {
+        names.push_back(wxString::FromUTF8((std::string(themes[i].dark ? "Dark · " : "Light · ") + themes[i].name).c_str()));
+        if (themes[i].id == Theme::current().id)
+            current = (unsigned int) i;
+    }
+
+    auto [sizer, combobox] = create_item_combobox_base(title, tooltip, "color_theme", names, current);
+
+    combobox->GetDropDown().Bind(wxEVT_COMBOBOX, [this](wxCommandEvent &e) {
+        const auto &themes = Theme::all();
+        const int   sel    = e.GetSelection();
+        if (sel < 0 || sel >= (int) themes.size())
+            return;
+        Theme::select(*app_config, themes[sel].id); // also sets dark_color_mode from the theme
+        app_config->save();
+        if (m_dark_mode_ckeckbox)
+            m_dark_mode_ckeckbox->SetValue(themes[sel].dark);
+        wxGetApp().Update_dark_mode_flag();
+#ifdef _MSW_DARK_MODE
+        wxGetApp().force_colors_update();
+        wxGetApp().update_ui_from_settings();
+        set_dark_mode();
+#endif
+        Theme::apply();
+        SimpleEvent evt = SimpleEvent(EVT_GLCANVAS_COLOR_MODE_CHANGED);
+        wxPostEvent(wxGetApp().plater(), evt);
+        e.Skip();
+    });
+
+    return sizer;
 }
 
 void PreferencesDialog::set_dark_mode()
@@ -1686,6 +1727,8 @@ void PreferencesDialog::create_items()
 #ifdef _WIN32
     auto item_darkmode         = create_item_darkmode(_L("Enable dark Mode"), "", "dark_color_mode");
     g_sizer->Add(item_darkmode);
+    auto item_theme            = create_item_theme(_L("Color theme"), _L("Accent and surface colors, build plate included. Picking a dark or light theme also switches dark mode. Some parts update fully after a restart."));
+    g_sizer->Add(item_theme);
 #endif
 
     auto item_single_instance  = create_item_checkbox(_L("Allow only one Stratum Orca Slicer instance"),

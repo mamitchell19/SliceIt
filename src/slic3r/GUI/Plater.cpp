@@ -2508,7 +2508,7 @@ bool Sidebar::priv::sync_extruder_list(bool &only_external_material, bool is_man
 
 void Sidebar::priv::update_sync_status(const MachineObject *obj)
 {
-    StateColor not_synced_colour(std::pair<wxColour, int>(wxColour("#009688"), StateColor::Normal));
+    StateColor not_synced_colour(std::pair<wxColour, int>(StateColor::accentText(), StateColor::Normal));
     auto clear_all_sync_status = [this]() {
         panel_printer_preset->ShowBadge(false);
         panel_printer_bed->ShowBadge(false);
@@ -3175,8 +3175,8 @@ Sidebar::Sidebar(Plater *parent)
                 std::pair<wxColour, int>(wxColour("#F8F8F8"), StateColor::Hovered),
                 std::pair<wxColour, int>(wxColour("#F8F8F8"), StateColor::Normal));
         StateColor btn_sync_bd_col(
-                std::pair<wxColour, int>(wxColour("#009688"), StateColor::Pressed),
-                std::pair<wxColour, int>(wxColour("#009688"), StateColor::Hovered),
+                std::pair<wxColour, int>(StateColor::accentText(), StateColor::Pressed),
+                std::pair<wxColour, int>(StateColor::accentText(), StateColor::Hovered),
                 std::pair<wxColour, int>(wxColour("#EEEEEE"), StateColor::Normal));
         btn_sync->SetBackgroundColor(btn_sync_bg_col);
         btn_sync->SetBorderColor(btn_sync_bd_col);
@@ -3572,7 +3572,7 @@ Sidebar::Sidebar(Plater *parent)
             e.Skip();
             return;
         }
-        p->m_search_bar->SetBorderColor(wxColour("#009688"));
+        p->m_search_bar->SetBorderColor(StateColor::accentText());
         wxPoint pos = this->p->m_search_bar->ClientToScreen(wxPoint(0, 0));
 #ifndef __WXGTK__
         pos.y += this->p->m_search_bar->GetRect().height;

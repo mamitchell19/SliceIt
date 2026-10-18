@@ -748,12 +748,12 @@ void PrintingTaskPanel::create_panel(wxWindow* parent)
     m_staticText_progress_percent = new wxStaticText(penel_text, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, 0);
     m_staticText_progress_percent->SetFont(::Label::Head_18);
     m_staticText_progress_percent->SetMaxSize(wxSize(-1, FromDIP(20)));
-    m_staticText_progress_percent->SetForegroundColour(wxColour(0, 150, 136));
+    m_staticText_progress_percent->SetForegroundColour(StateColor::accentText());
 
     m_staticText_progress_percent_icon = new wxStaticText(penel_text, wxID_ANY, "%", wxDefaultPosition, wxDefaultSize, 0);
     m_staticText_progress_percent_icon->SetFont(::Label::Body_11);
     m_staticText_progress_percent_icon->SetMaxSize(wxSize(-1, FromDIP(13)));
-    m_staticText_progress_percent_icon->SetForegroundColour(wxColour(0, 150, 136));
+    m_staticText_progress_percent_icon->SetForegroundColour(StateColor::accentText());
 
     sizer_percent->Add(m_staticText_progress_percent, 0, 0, 0);
 
@@ -1907,7 +1907,7 @@ wxBoxSizer *StatusBasePanel::create_misc_control(wxWindow *parent)
         StateColor(std::make_pair(DISCONNECT_TEXT_COL, (int)StateColor::Disabled), std::make_pair(NORMAL_FAN_TEXT_COL, (int)StateColor::Normal)));
 
     m_switch_fan->Bind(wxEVT_ENTER_WINDOW, [this](auto& e) {
-        m_fan_panel->SetBackgroundColor(wxColour(0, 150, 136));
+        m_fan_panel->SetBackgroundColor(StateColor::accentText());
         });
 
     m_switch_fan->Bind(wxEVT_LEAVE_WINDOW, [this, parent](auto& e) {
