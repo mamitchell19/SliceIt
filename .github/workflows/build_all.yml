@@ -3,6 +3,12 @@ name: Build SliceIt (Windows)
 # SliceIt: Windows x64 only. The first run builds OrcaSlicer's dependencies from
 # source (roughly 1-2 hours) and caches them; later runs reuse that cache and only
 # rebuild SliceIt itself.
+#
+# Releases: publishing a GitHub release builds that release's code and attaches
+# the Windows installer and portable zip to it. To attach files to a release that
+# already exists without rebuilding, use "Run workflow" and enter its tag; that
+# takes the files from the latest successful build of main.
+#
 # The file keeps its OrcaSlicer name because scripts/ci_deps_cache.sh and the
 # reusable build_*.yml workflows look it up by name.
 
@@ -14,8 +20,15 @@ on:
      - '**.md'
      - 'docs/**'
 
+  release:
+    types: [published]
+
   workflow_dispatch: # "Run workflow" button in the Actions tab
     inputs:
+      release_tag:
+        description: 'Attach the latest main build to this existing release tag (leave empty to just build)'
+        type: string
+        default: ''
       build-deps-only:
         description: 'Only build dependencies (bypasses caching)'
         type: boolean
@@ -28,6 +41,8 @@ concurrency:
 jobs:
   build_windows:
     name: Build Windows ${{ matrix.arch }}
+    # A dispatch with a release tag reuses an existing build instead.
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.release_tag == '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -42,3 +57,65 @@ jobs:
       compiler: ${{ matrix.compiler }}
       build-deps-only: ${{ inputs.build-deps-only || false }}
     secrets: inherit
+
+  attach_to_release:
+    name: Attach Windows files to release
+    needs: build_windows
+    if: >-
+      ${{ !cancelled() && (
+        (github.event_name == 'release' && needs.build_windows.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # upload release assets
+      actions: read     # download artifacts from another run
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+    steps:
+      - name: Download this run's Windows build
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/download-artifact@v8
+        with:
+          pattern: SliceIt_Windows_*
+          path: dist
+
+      - name: Download the latest main Windows build
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          gh release view "$TAG" > /dev/null || { echo "::error::No release with tag '$TAG' exists in $GH_REPO."; exit 1; }
+          # Newest successful push build of main that still has its SliceIt artifacts.
+          for id in $(gh run list --workflow build_all.yml --branch main --event push --status success \
+                        --limit 20 --json databaseId --jq '.[].databaseId'); do
+            if gh api "repos/$GH_REPO/actions/runs/$id/artifacts" \
+                 --jq '[.artifacts[] | select(.name | startswith("SliceIt_Windows_")) | select(.expired | not)] | length > 0' \
+                 | grep -q true; then
+              echo "Using build https://github.com/$GH_REPO/actions/runs/$id"
+              gh run download "$id" --pattern 'SliceIt_Windows_*' --dir dist
+              exit 0
+            fi
+          done
+          echo "::error::No successful main build with Windows files was found. Run this workflow with the tag field empty first, then try again."
+          exit 1
+
+      - name: Package files
+        run: |
+          mkdir -p upload
+          shopt -s nullglob
+          # Portable build: the artifact holds the app folder's contents; zip them in a SliceIt folder.
+          for d in dist/SliceIt_Windows_*_portable; do
+            name=$(basename "$d")
+            mv "$d" SliceIt
+            zip -qr "upload/$name.zip" SliceIt
+            rm -rf SliceIt
+          done
+          # Installer: the artifact holds the .exe.
+          for exe in dist/SliceIt_Windows_*_installer/*.exe; do
+            mv "$exe" upload/
+          done
+          ls -la upload
+          [ -n "$(ls upload)" ] || { echo "::error::The build produced no Windows files to attach."; exit 1; }
+
+      - name: Attach to release ${{ env.TAG }}
+        run: gh release upload "$TAG" upload/* --clobber
